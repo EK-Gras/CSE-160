@@ -2,10 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Change a point color</title>
+    <title>Robin Voss-Medina's Cool Paint Website</title>
   </head>
 
   <body onload="main()">
+    Welcome to Robin Voss-Medina's Cool Paint Website!! <br>
+    For my creative contribution to this assignment, I added a "Vertex Draw" option to the types of shapes you can draw. <br> 
+    This option allows you to click 3 points on the canvas to draw a triangle of any size or shape. <br>
+    Please enjoy! <br><br>
+
     <canvas id="webgl" width="400" height="400">
     Please use a browser that supports "canvas"
     </canvas>
@@ -20,6 +25,7 @@
     <button type="button" id="squareButton">Squares</button>
     <button type="button" id="triangleButton">Triangles</button>
     <button type="button" id="circleButton">Circles</button>
+    <button type="button" id="vertexButton">Vertex Draw</button>
 
     <br><br>
 
@@ -35,6 +41,14 @@
     <br>
 
     Circle Segment Count (4-32) <input type="range" min="4" max="32" value="12" class="slide" id="segmentSlide">
+
+    <br><br>
+
+    <button type="button" id="pictureButton">Click Here to Draw a Cool Picture! (Reference Below)</button>
+
+    <br><br>
+
+    <img src="picture_reference.png" alt="Reference Image" height="350" width="500">
 
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>

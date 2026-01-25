@@ -79,6 +79,9 @@ function addActionsForHtmlUI() {
   document.getElementById('squareButton').addEventListener("mouseup", function() { g_selectedType = 'square'; });
   document.getElementById('triangleButton').addEventListener("mouseup", function() { g_selectedType = 'triangle'; });
   document.getElementById('circleButton').addEventListener("mouseup", function() { g_selectedType = 'circle'; });
+  document.getElementById('vertexButton').addEventListener("mouseup", function() { g_selectedType = 'vertex'; });
+
+  document.getElementById('pictureButton').addEventListener("mouseup", drawPicture);
 
   // Slide Events
   document.getElementById('redSlide').addEventListener("mouseup", function() { g_selectedColor[0] = this.value/100; });
@@ -100,10 +103,15 @@ function main() {
 
   // Register function (event handler) to be called on a mouse press
   canvas.onmousemove = function(ev) {
-    if (ev.buttons == 1) {
+    if (ev.buttons == 1 && g_selectedType != 'vertex') 
       click(ev);
-    }
   };
+
+  canvas.onmousedown = function(ev) {
+    if (g_selectedType == 'vertex') {
+      pushVertex(ev);
+    }
+  }
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -160,6 +168,8 @@ function click(ev) {
     case 'circle':
       newShape = new Circle();
       break;
+    default:
+      return;
   }
 
   newShape.position = [x, y, 0.0];
@@ -170,6 +180,31 @@ function click(ev) {
 
   // Draw all shapes we've put in the canvas
   renderAllShapes();
+}
+
+var g_vertexList = [];
+
+function pushVertex(ev) {
+  // Extract x, y
+  var [x, y] = convertCoordinatesEventToGL(ev);
+  // Push these coords to the vertexList
+  g_vertexList.push(x);
+  g_vertexList.push(y);
+
+  if (g_vertexList.length >= 6) {
+    // Instantiate a VertexTriangle with the 3 vertices
+    var newShape = new VertexTriangle();
+    newShape.color = g_selectedColor.slice();
+    newShape.vertices = g_vertexList.slice(0, 6);
+    g_vertexList = [];
+
+    // Add it to the list of shapes
+    g_shapesList.push(newShape);
+
+    // Draw!
+    renderAllShapes();
+  }
+  
 }
 
 class Square{
@@ -200,7 +235,7 @@ class Square{
   }
 }
 
-class Triangle{
+class Triangle {
   constructor() {
     this.type = 'triangle';
     this.position = [0.0, 0.0, 0.0];
@@ -215,8 +250,6 @@ class Triangle{
 
     // Pass the color of the point to u_FragColor variable
     gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-    // Pass the size of the point to u_Size variable
-    gl.uniform1f(u_Size, s);
 
     // Draw this triangle!
     var d = this.size/200.0
@@ -225,7 +258,29 @@ class Triangle{
   }
 }
 
-class Circle{
+class VertexTriangle {
+    constructor() {
+    this.type = 'triangle';
+    this.position = [0.0, 0.0, 0.0];
+    this.vertices = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    this.color = [1.0, 1.0, 1.0, 1.0];
+    this.size = 5.0;
+  }
+
+  render() {
+    var xy = this.position;
+    var rgba = this.color;
+    var s = this.size;
+
+    // Pass the color of the point to u_FragColor variable
+    gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+
+    // Draw this triangle!
+    drawTriangle(this.vertices);
+  }
+}
+
+class Circle {
   constructor() {
     this.type = 'circle';
     this.position = [0.0, 0.0, 0.0];
@@ -243,7 +298,7 @@ class Circle{
     gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
 
     // Get the delta for size, divide by 400 instead of 200 so the diameter is consistent with the square & triangle sizes
-    var d = this.size/400.0
+    var d = s/400.0
     
     var angleStep = 360/this.segments;
     for (var angle = 0; angle < 360; angle += angleStep) {
@@ -256,8 +311,8 @@ class Circle{
       var vec1 = [Math.cos((angle1 * Math.PI) / 180) * d, Math.sin((angle1 * Math.PI) / 180) * d];
       var vec2 = [Math.cos((angle2 * Math.PI) / 180) * d, Math.sin((angle2 * Math.PI) / 180) * d];
       // Then we get the coordinates of these points in absolute space
-      var pt1 = [pt0[0] + vec1[0], pt0[1]+vec1[1]];
-      var pt2 = [pt0[0] + vec2[0], pt0[1]+vec2[1]];
+      var pt1 = [pt0[0] + vec1[0], pt0[1] + vec1[1]];
+      var pt2 = [pt0[0] + vec2[0], pt0[1] + vec2[1]];
 
       drawTriangle([pt0[0], pt0[1], pt1[0], pt1[1], pt2[0], pt2[1]]);
     }
@@ -284,4 +339,94 @@ function drawTriangle(vertices) {
   gl.enableVertexAttribArray(a_Position);
 
   gl.drawArrays(gl.TRIANGLES, 0, n);
+}
+
+function drawPicture() {
+  var triangles = [
+    // SKY BACKGROUND
+    [0, 0, 2, 0, 0, 11, 0.0, 1.0, 1.0],
+    [2, 0, 0, 11, 2, 11, 0.0, 1.0, 1.0],
+    [2, 0, 2, 2, 14, 0, 0.0, 1.0, 1.0],
+    [2, 2, 14, 0, 14, 2, 0.0, 1.0, 1.0],
+    [14, 0, 14, 11, 16, 0, 0.0, 1.0, 1.0],
+    [16, 0, 14, 11, 16, 11, 0.0, 1.0, 1.0],
+
+    // LAPTOP SCREEN FRAME
+    [2, 2, 3, 2, 2, 11, 0.7, 0.7, 0.7],
+    [3, 2, 2, 11, 3, 11, 0.7, 0.7, 0.7],
+    [3, 2, 3, 3, 13, 2, 0.7, 0.7, 0.7],
+    [3, 3, 13, 2, 13, 3, 0.7, 0.7, 0.7],
+    [13, 2, 14, 2, 13, 11, 0.7, 0.7, 0.7],
+    [14, 2, 13, 11, 14, 11, 0.7, 0.7, 0.7],
+    [3, 10, 3, 11, 13, 10, 0.7, 0.7, 0.7],
+    [3, 11, 13, 10, 13, 11, 0.7, 0.7, 0.7],
+
+    // LAPTOP SCREEN
+    [3, 3, 13, 3, 3, 10, 0.0, 0.0, 0.0],
+    [13, 3, 3, 10, 13, 10, 0.0, 0.0, 0.0],
+
+    // R
+    [5, 4, 4, 5, 5, 6, 0.0, 1.0, 0.7],
+    [5, 4, 6, 5, 5, 6, 0.0, 1.0, 0.7],
+    [4, 5, 4, 7, 6, 7, 0.0, 1.0, 0.7],
+
+    // L
+    [7, 4, 8, 4, 8, 5, 0.9, 0.9, 1.0],
+    [7, 4, 7, 6, 9, 6, 0.9, 0.9, 1.0],
+    [8, 5, 9, 5, 9, 6, 0.9, 0.9, 1.0],
+
+    // V
+    [7, 7, 7, 8, 8, 8, 0.9, 0.9, 1.0],
+    [9, 7, 8, 8, 9, 8, 0.9, 0.9, 1.0],
+    [7, 8, 9, 8, 8, 9, 0.9, 0.9, 1.0],
+
+    // M
+    [10, 6, 10, 7, 11, 7, 1.0, 0.6, 0.9],
+    [12, 6, 11, 7, 12, 7, 1.0, 0.6, 0.9],
+    [10, 7, 12, 7, 10, 9, 1.0, 0.6, 0.9],
+    [10, 7, 12, 7, 12, 9, 1.0, 0.6, 0.9],
+    [10, 8, 12, 8, 11, 9, 1.0, 0.6, 0.9],
+
+    // DESK BACKGROUND
+    [0, 11, 2, 11, 0, 16, 0.5, 0.3, 0.0],
+    [14, 11, 16, 11, 16, 16, 0.5, 0.3, 0.0],
+
+    // LAPTOP KEYBOARD FRAME
+    [2, 11, 0, 16, 2, 16, 0.8, 0.8, 0.8],
+    [2, 11, 14, 11, 2, 12, 0.8, 0.8, 0.8],
+    [14, 11, 2, 12, 14, 12, 0.8, 0.8, 0.8],
+    [14, 11, 14, 16, 16, 16, 0.8, 0.8, 0.8],
+    [2, 12, 3, 12, 2, 16, 0.8, 0.8, 0.8],
+    [13, 12, 14, 12, 14, 16, 0.8, 0.8, 0.8],
+
+    // LAPTOP KEYBOARD
+    [3, 12, 2, 16, 3, 16, 0.6, 0.6, 0.6],
+    [3, 12, 13, 12, 3, 16, 0.6, 0.6, 0.6],
+    [13, 12, 3, 16, 13, 16, 0.6, 0.6, 0.6],
+    [13, 12, 13, 16, 14, 16, 0.6, 0.6, 0.6]
+  ]
+
+  for (var i = 0; i < triangles.length; i++) {
+    // Apply the color values of the current triangle
+    gl.uniform4f(u_FragColor, triangles[i][6], triangles[i][7], triangles[i][8], 1.0);
+
+    // Resize and reposition the coordinates for the canvas
+    var x0 = (triangles[i][0] / 8.0) - 1;
+    var y0 = (triangles[i][1] / -8.0) + 1;
+    var x1 = (triangles[i][2] / 8.0) - 1;
+    var y1 = (triangles[i][3] / -8.0) + 1;
+    var x2 = (triangles[i][4] / 8.0) - 1;
+    var y2 = (triangles[i][5] / -8.0) + 1;
+
+    drawTriangle([x0, y0, x1, y1, x2, y2]);
+  }
+
+  // console.log("ran drawPicture");
+
+  // gl.uniform4f(u_FragColor, 0.0, 1.0, 1.0, 1.0);
+  // drawTriangle([
+  //   (0 / 8.0) - 1, (0 / -8.0) + 1, 
+  //   (2 / 8.0) - 1, (0 / -8.0) + 1, 
+  //   (0 / 8.0) - 1, (11 / -8.0) + 1
+  // ]);
 }
