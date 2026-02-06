@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Robin Voss-Medina's Totally Tubular Blocky Animal</title>
+  </head>
+
+  <body onload="main()">
+
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+    
+    <p id = "fpsReader"></p>
+
+    Camera Angle <input type="range" min="0" max="360" value="0" class="slide" id="angleSlide">
+
+    <br><br>
+
+    Toggle Animations
+    <button type="button" id="animationOnButton">ON</button>
+    <button type="button" id="animationOffButton">OFF</button>
+
+    <br><br>
+
+    Body <input type="range" min="0" max="45" value="0" class="slide" id="bodySlide">
+
+    Head <input type="range" min="0" max="10" value="0" class="slide" id="headSlide">
+
+    Wings <input type="range" min="0" max="90" value="0" class="slide" id="wingSlide">
+
+    <br>
+
+    Upper Tail <input type="range" min="0" max="30" value="0" class="slide" id="uTailSlide">
+    Middle Tail <input type="range" min="0" max="30" value="0" class="slide" id="mTailSlide">
+    Lower Tail <input type="range" min="0" max="30" value="0" class="slide" id="lTailSlide">
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix-cse160.js"></script>
+    <script src="asg2.js"></script>
+  </body>
+</html>
