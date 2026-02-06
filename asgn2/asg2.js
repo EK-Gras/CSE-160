@@ -92,6 +92,7 @@ var g_selectedSegmentCount = 12;
 var g_globalAngleX = 0;
 var g_globalAngleY = 0;
 var g_animationToggle = true;
+var g_pokeAnimationToggle = 0;
 
 var g_wingAngle = 0;
 var g_bodyAngle = 0;
@@ -153,6 +154,10 @@ function main() {
       click(ev);
   };
 
+  canvas.onmousedown = function(ev) {
+    g_pokeAnimationToggle = 20;
+  }
+
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -164,7 +169,11 @@ function main() {
 
 function tick() {
   g_seconds = performance.now()/1000.0-g_startTime;
-  if (g_animationToggle) calculateAnimations();
+  if (g_pokeAnimationToggle > 0) {
+    calculateAnimationsPoke();
+    g_pokeAnimationToggle--;
+  }
+  else if (g_animationToggle) calculateAnimations();
   renderAllShapes();
   var fpsReader = document.getElementById('fpsReader');
   var duration = performance.now() - g_startTime;
@@ -185,6 +194,12 @@ function calculateAnimations() {
   g_bodyAngle = (10 * Math.sin(g_seconds)) - 30;
   g_headAngle = (-10 * Math.sin(g_seconds)) + 30;
   g_wingAngle = ((5 * Math.sin(g_seconds)) - 5);
+}
+
+function calculateAnimationsPoke() {
+  g_bodyAngle = 0;
+  g_headAngle = 0;
+  g_wingAngle = (-45 * (Math.sin(g_seconds * 10) + 1));
 }
 
 function convertCoordinatesEventToGL(ev) {
@@ -239,6 +254,13 @@ function renderAllShapes() {
   cere.matrix.translate(0.15, 0.175, -0.05);
   cere.matrix.scale(0.1, 0.05, 0.05);
   cere.render();
+
+  var hat = new Cone();
+  hat.color = [0.6, 0.9, 0.7, 1.0];
+  hat.matrix = new Matrix4(coords_head);
+  hat.matrix.translate(0.1, 0.4, 0.1);
+  hat.matrix.scale(0.2, 0.2, 0.2);
+  hat.render();
 
   var leftWing_Inner = new Cube();
   leftWing_Inner.color = [0.2, 0.2, 0.2, 1.0];
@@ -511,6 +533,82 @@ class Cube {
       1.0, 0.0, 0.0, 
       1.0, 0.0, 1.0, 
       1.0, 1.0, 1.0
+    ])
+  }
+}
+
+class Cone {
+  constructor() {
+    this.type = 'cube';
+    // this.position = [0.0, 0.0, 0.0];
+    this.color = [1.0, 1.0, 1.0, 1.0];
+    // this.size = 5.0;
+    // this.segments = g_selectedSegmentCount;
+    this.matrix = new Matrix4();
+  }
+
+  render() {
+    var rgba = this.color;
+
+    gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
+    
+    // Front of cone
+
+    // Color
+    gl.uniform4f(u_FragColor, rgba[0]*0.9, rgba[1]*0.9, rgba[2]*0.9, rgba[3]);
+    // Shape
+    drawTriangle3D([
+      0.0, 0.0, 0.0, 
+      0.5, 1.0, 0.5, 
+      1.0, 0.0, 0.0
+    ])
+
+    // Back of cone
+
+    // Color
+    gl.uniform4f(u_FragColor, rgba[0]*0.7, rgba[1]*0.7, rgba[2]*0.7, rgba[3]);
+    // Shape
+    drawTriangle3D([
+      0.0, 0.0, 1.0, 
+      0.5, 1.0, 0.5, 
+      1.0, 0.0, 1.0
+    ])
+
+    // Left of cone
+
+    // Color
+    gl.uniform4f(u_FragColor, rgba[0]*0.8, rgba[1]*0.8, rgba[2]*0.8, rgba[3]);
+    // Shape
+    drawTriangle3D([
+      0.0, 0.0, 0.0, 
+      0.5, 1.0, 0.5, 
+      0.0, 0.0, 1.0
+    ])
+    // Right of cone
+
+    // Color
+    gl.uniform4f(u_FragColor, rgba[0]*0.8, rgba[1]*0.8, rgba[2]*0.8, rgba[3]);
+    // Shape
+    drawTriangle3D([
+      1.0, 0.0, 0.0, 
+      0.5, 1.0, 0.5, 
+      1.0, 0.0, 1.0
+    ])
+
+    // Bottom of cube
+
+    // Color
+    gl.uniform4f(u_FragColor, rgba[0]*0.6, rgba[1]*0.6, rgba[2]*0.6, rgba[3]);
+    // Shape
+    drawTriangle3D([
+      0.0, 0.0, 0.0, 
+      0.0, 0.0, 1.0, 
+      1.0, 0.0, 1.0
+    ])
+    drawTriangle3D([
+      0.0, 0.0, 0.0, 
+      1.0, 0.0, 1.0, 
+      1.0, 0.0, 0.0
     ])
   }
 }
